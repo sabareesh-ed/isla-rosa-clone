@@ -1,10 +1,11 @@
 import '/src/styles/style.css';
-import * as THREE from '/node_modules/.vite/deps/three.js';
-import { GLTFLoader } from '/node_modules/three/examples/jsm/loaders/GLTFLoader.js';
-import { OrbitControls } from '/node_modules/three/examples/jsm/controls/OrbitControls.js';
-import { Water } from '/node_modules/three/examples/jsm/objects/Water.js';
-import { Sky } from '/node_modules/three/examples/jsm/objects/Sky.js';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { Water } from 'three/examples/jsm/objects/Water.js';
+import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { GUI } from 'dat.gui';
+
 
 const canvas = document.querySelector('canvas.webgl');
 
