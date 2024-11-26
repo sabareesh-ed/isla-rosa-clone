@@ -6,6 +6,7 @@ import { Water } from 'three/examples/jsm/objects/Water.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { GUI } from 'dat.gui';
 
+// Canvas
 const canvas = document.querySelector('canvas.webgl');
 
 // Scene
@@ -41,7 +42,6 @@ loader.load(
     building.scale.set(1, 1, 1);
     scene.add(building);
     building.rotation.y = -Math.PI / 1.25;
-
     swoopCameraToBuilding();
   },
   (xhr) => {
@@ -96,9 +96,7 @@ const sun = new THREE.Vector3();
 function updateSun() {
   const phi = THREE.MathUtils.degToRad(90 - parameters.elevation);
   const theta = THREE.MathUtils.degToRad(parameters.azimuth);
-
   sun.setFromSphericalCoords(1, phi, theta);
-
   sky.material.uniforms['sunPosition'].value.copy(sun);
   water.material.uniforms['sunDirection'].value.copy(sun).normalize();
 }
@@ -112,12 +110,6 @@ controls.dampingFactor = 0.05;
 controls.enableZoom = true;
 controls.maxPolarAngle = Math.PI / 2;
 
-// // Disable Orbit Controls when scrolling
-// canvas.addEventListener('wheel', (event) => {
-//   controls.enabled = false;
-//   swoopCameraToBuilding();
-// });
-
 // Camera Swoop Animation
 let swoopCompleted = false;
 function swoopCameraToBuilding() {
@@ -125,7 +117,6 @@ function swoopCameraToBuilding() {
     const targetPosition = new THREE.Vector3(-4, 2, 12);
     const startPosition = camera.position.clone();
     const animationDuration = 2.0;
-
     const startTime = performance.now();
 
     function animateSwoop() {
@@ -138,7 +129,6 @@ function swoopCameraToBuilding() {
           return 1 - Math.pow(1 - (t - 0.5) * 2, 3) * 0.5;
         }
       };
-      console.log("animate swoop happened")
 
       camera.position.lerpVectors(startPosition, targetPosition, easeInOutQuad(t));
       camera.lookAt(building.position);
@@ -164,7 +154,7 @@ let scrollEndPosition = window.innerHeight * 2; // 100vh
 
 // Camera target position during scroll animation
 const startCameraPosition = { x: -4, y: 2, z: 12 };
-const endCameraPosition = { x: -6, y: 1, z: 8 };
+const endCameraPosition = { x: -6, y: 1, z: 6 };
 let scrollCameraPosition = { ...startCameraPosition };
 
 window.addEventListener('scroll', () => {
@@ -186,7 +176,6 @@ window.addEventListener('scroll', () => {
 
     // Update camera position during scroll
     camera.position.set(scrollCameraPosition.x, scrollCameraPosition.y, scrollCameraPosition.z);
-    // camera.lookAt(building.position);
 
     // Update GUI values in real time
     folderCamera.__controllers.forEach((controller) => controller.updateDisplay());
@@ -194,7 +183,6 @@ window.addEventListener('scroll', () => {
     if (scrollPercentage >= 100) {
       scrollStarted = false; // Reset after reaching 100%
     }
-    console.log("scrolling")
   }
 });
 
