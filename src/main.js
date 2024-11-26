@@ -6,7 +6,6 @@ import { Water } from 'three/examples/jsm/objects/Water.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { GUI } from 'dat.gui';
 
-
 const canvas = document.querySelector('canvas.webgl');
 
 // Scene
@@ -113,24 +112,24 @@ controls.dampingFactor = 0.05;
 controls.enableZoom = true;
 controls.maxPolarAngle = Math.PI / 2;
 
-// Disable Orbit Controls when scrolling
-canvas.addEventListener('wheel', (event) => {
-  controls.enabled = false;
-  swoopCameraToBuilding();
-});
+// // Disable Orbit Controls when scrolling
+// canvas.addEventListener('wheel', (event) => {
+//   controls.enabled = false;
+//   swoopCameraToBuilding();
+// });
 
 // Camera Swoop Animation
 let swoopCompleted = false;
 function swoopCameraToBuilding() {
   if (building) {
-    const targetPosition = new THREE.Vector3(-5, 2, 8);
+    const targetPosition = new THREE.Vector3(-4, 2, 12);
     const startPosition = camera.position.clone();
     const animationDuration = 2.0;
 
     const startTime = performance.now();
 
     function animateSwoop() {
-      const elapsedTime = (performance.now() - startTime) / 2000;
+      const elapsedTime = (performance.now() - startTime) / 2250;
       const t = Math.min(elapsedTime / animationDuration, 1);
       const easeInOutQuad = (t) => {
         if (t < 0.5) {
@@ -139,6 +138,7 @@ function swoopCameraToBuilding() {
           return 1 - Math.pow(1 - (t - 0.5) * 2, 3) * 0.5;
         }
       };
+      console.log("animate swoop happened")
 
       camera.position.lerpVectors(startPosition, targetPosition, easeInOutQuad(t));
       camera.lookAt(building.position);
@@ -163,8 +163,8 @@ let scrollStarted = false;
 let scrollEndPosition = window.innerHeight * 2; // 100vh
 
 // Camera target position during scroll animation
-const startCameraPosition = { x: -5, y: 2, z: 8 };
-const endCameraPosition = { x: -2.5, y: 1, z: 8 };
+const startCameraPosition = { x: -4, y: 2, z: 12 };
+const endCameraPosition = { x: -6, y: 1, z: 8 };
 let scrollCameraPosition = { ...startCameraPosition };
 
 window.addEventListener('scroll', () => {
@@ -180,13 +180,13 @@ window.addEventListener('scroll', () => {
     console.log(`Scroll progress: ${scrollPercentage.toFixed(2)}%`);
 
     // Linear interpolation for camera position based on scroll progress
-    scrollCameraPosition.x = startCameraPosition.x + (endCameraPosition.x - startCameraPosition.x) * (scrollPercentage / 100);
-    scrollCameraPosition.y = startCameraPosition.y + (endCameraPosition.y - startCameraPosition.y) * (scrollPercentage / 100);
-    scrollCameraPosition.z = startCameraPosition.z + (endCameraPosition.z - startCameraPosition.z) * (scrollPercentage / 100);
+    scrollCameraPosition.x = startCameraPosition.x + (endCameraPosition.x - startCameraPosition.x) * (scrollPercentage.toFixed(0) / 100);
+    scrollCameraPosition.y = startCameraPosition.y + (endCameraPosition.y - startCameraPosition.y) * (scrollPercentage.toFixed(0) / 100);
+    scrollCameraPosition.z = startCameraPosition.z + (endCameraPosition.z - startCameraPosition.z) * (scrollPercentage.toFixed(0) / 100);
 
     // Update camera position during scroll
     camera.position.set(scrollCameraPosition.x, scrollCameraPosition.y, scrollCameraPosition.z);
-    camera.lookAt(building.position);
+    // camera.lookAt(building.position);
 
     // Update GUI values in real time
     folderCamera.__controllers.forEach((controller) => controller.updateDisplay());
@@ -194,6 +194,7 @@ window.addEventListener('scroll', () => {
     if (scrollPercentage >= 100) {
       scrollStarted = false; // Reset after reaching 100%
     }
+    console.log("scrolling")
   }
 });
 
