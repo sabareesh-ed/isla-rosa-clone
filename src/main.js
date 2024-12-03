@@ -25,16 +25,28 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.5;
 
 // Lights
-const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
 directionalLight.position.set(5, 5, 5);
 scene.add(directionalLight);
+directionalLight.intensity = 1.5;
 
 // GLTF Loader - Building Model
 let building;
 const loader = new GLTFLoader();
+const loaderBar = document.querySelector('.loader-logo-bar'); // Assuming the bar is inside the loader-logo-bar element
+const loaderColumns = document.querySelectorAll('.loader-column');
+const loaderLogo = document.querySelector('.loader-logo');
+const loaderWrap = document.querySelector('.loader');
+let loaderProgress = 0; // Store the loading progress percentage
+
+renderer.toneMappingExposure = 0.7; 
+
+// Define the staggered delay times for each column (in seconds)
+const staggerTimes = [0.4, 0.2, 0.6, 0.8, 0.5, 0.3, 0.6, 0.4, 0.7]; 
+
 loader.load(
   'http://localhost:3000/assets/building.glb',
   (gltf) => {
@@ -42,53 +54,98 @@ loader.load(
     building.scale.set(1, 1, 1);
     scene.add(building);
     building.rotation.y = -Math.PI / 1.25;
-    swoopCameraToBuilding();
+     
+    setTimeout(() => {
+      loaderLogo.classList.add('hide-logo');
+    }, 400);
+
+    loaderColumns.forEach((column, index) => {
+      const delay = staggerTimes[index] * 1000; 
+      setTimeout(() => {
+        column.style.height = '0';
+      }, delay);
+    });
+
+    setTimeout(() => {
+      swoopCameraToBuilding();
+    }, 1000);
+
+    setTimeout(() => {
+      loaderWrap.style.height = '0px'
+    }, 2000);
+
+    // New functionality: Reveal heading letters with delay
+    setTimeout(() => {
+      const headingLetters = document.querySelectorAll('.heading-letter');
+      headingLetters.forEach((letter, index) => {
+        setTimeout(() => {
+          letter.classList.add('reveal');
+        }, index * 100); // 125ms delay between each letter
+      });
+
+      // After all letters are revealed, reveal the subtitle wrap
+      setTimeout(() => {
+        const headingSubtitleWrap = document.querySelector('.heading-subtitle-wrap');
+        headingSubtitleWrap.classList.add('reveal');
+      }, headingLetters.length * 50); // Delay for all letters to reveal first
+    }, 3500); // 2.3 seconds delay after the model loads
   },
   (xhr) => {
-    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    loaderProgress = (xhr.loaded / xhr.total) * 100;  
+    loaderBar.style.width = loaderProgress + '%';
+    console.log(loaderProgress + '% loaded');
   },
   (error) => {
     console.error('An error occurred while loading the model:', error);
   }
 );
 
+
+
+
 // Water
-const waterGeometry = new THREE.PlaneGeometry(10000, 10000);
+const waterGeometry = new THREE.PlaneGeometry(4000, 4000);
 const textureLoader = new THREE.TextureLoader();
 const waterNormals = textureLoader.load('https://threejs.org/examples/textures/waternormals.jpg', (texture) => {
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
 });
 
 const water = new Water(waterGeometry, {
-  textureWidth: 512,
-  textureHeight: 512,
+  textureWidth: 256,
+  textureHeight: 256,
   waterNormals: waterNormals,
   sunDirection: new THREE.Vector3(),
   sunColor: 0xffffff,
   waterColor: 0x001e0f,
   distortionScale: 1.7,
-  size: 12
+  size: 30
 });
 
 water.rotation.x = -Math.PI / 2;
 water.position.y = -1;
-water.material.uniforms['size'].value = 12.0;
+water.material.uniforms['size'].value = 60.0;
+
 scene.add(water);
 
 // Skybox
 const sky = new Sky();
-sky.scale.setScalar(10000);
+sky.scale.setScalar(1000);
 scene.add(sky);
 
 const skyUniforms = sky.material.uniforms;
-skyUniforms['turbidity'].value = 10;
-skyUniforms['rayleigh'].value = 2;
-skyUniforms['mieCoefficient'].value = 0.005;
-skyUniforms['mieDirectionalG'].value = 0.8;
+
+skyUniforms['turbidity'].value = 2;  // Moderate turbidity
+skyUniforms['rayleigh'].value = 1.5;  // Slightly reduced Rayleigh scattering (less intense blue)
+skyUniforms['mieCoefficient'].value = 0.005;  // Reduce to allow more clarity
+skyUniforms['mieDirectionalG'].value = 0.7;  // Less hazy sun
+
+water.material.uniforms['sunColor'].value = new THREE.Color(0xffffff);  // Maintain white sunlight
+water.material.uniforms['waterColor'].value = new THREE.Color(0x001e0f);  // Dark water color, but not too black
+
 
 const parameters = {
-  elevation: 2,
-  azimuth: 90,
+  elevation: 4.5,
+  azimuth: 100,
 };
 
 const sun = new THREE.Vector3();
@@ -99,9 +156,13 @@ function updateSun() {
   sun.setFromSphericalCoords(1, phi, theta);
   sky.material.uniforms['sunPosition'].value.copy(sun);
   water.material.uniforms['sunDirection'].value.copy(sun).normalize();
+  water.material.uniforms['sunColor'].value = new THREE.Color(0xffffff);  // White sun color
+  water.material.uniforms['sunDirection'].value.copy(sun).normalize(); // Ensure it's pointing to the sun
+
 }
 
 updateSun();
+
 
 // Orbit Controls
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -116,7 +177,7 @@ function swoopCameraToBuilding() {
   if (building) {
     const targetPosition = new THREE.Vector3(-4, 2, 12);
     const startPosition = camera.position.clone();
-    const animationDuration = 2.0;
+    const animationDuration = 1.5;
     const startTime = performance.now();
 
     function animateSwoop() {
@@ -128,7 +189,7 @@ function swoopCameraToBuilding() {
         } else {
           return 1 - Math.pow(1 - (t - 0.5) * 2, 3) * 0.5;
         }
-      };
+      }; 
 
       camera.position.lerpVectors(startPosition, targetPosition, easeInOutQuad(t));
       camera.lookAt(building.position);
@@ -226,7 +287,7 @@ function animate() {
   requestAnimationFrame(animate);
 
   // Update water time uniform to create wobble
-  const elapsedTime = performance.now() * 0.001;
+  const elapsedTime = performance.now() * 0.0004;
   water.material.uniforms['time'].value = elapsedTime;
 
   controls.update();

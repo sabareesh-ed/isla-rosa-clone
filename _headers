@@ -1,0 +1,5 @@
+/main.js
+  Access-Control-Allow-Origin: https://isla-rosa-clone.webflow.io
+
+/assets/*
+  Access-Control-Allow-Origin: https://isla-rosa-clone.webflow.io
