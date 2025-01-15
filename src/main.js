@@ -48,7 +48,7 @@ renderer.toneMappingExposure = 0.7;
 const staggerTimes = [0.4, 0.2, 0.6, 0.8, 0.5, 0.3, 0.6, 0.4, 0.7]; 
 
 loader.load(
-  'http://localhost:3000/assets/building.glb',
+  'https://github.com/sabareesh-ed/isla-rosa-clone/raw/refs/heads/main/assets/building.glb',
   (gltf) => {
     building = gltf.scene;
     building.scale.set(1, 1, 1);
