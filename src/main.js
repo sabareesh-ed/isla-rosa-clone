@@ -71,36 +71,36 @@ loader.load(
     }, 1000);
 
     setTimeout(() => {
-      loaderWrap.style.height = '0px'
+      loaderWrap.style.height = '0px';
     }, 2000);
 
-    // New functionality: Reveal heading letters with delay
     setTimeout(() => {
       const headingLetters = document.querySelectorAll('.heading-letter');
       headingLetters.forEach((letter, index) => {
         setTimeout(() => {
           letter.classList.add('reveal');
-        }, index * 100); // 125ms delay between each letter
+        }, index * 100);
       });
 
-      // After all letters are revealed, reveal the subtitle wrap
       setTimeout(() => {
         const headingSubtitleWrap = document.querySelector('.heading-subtitle-wrap');
         headingSubtitleWrap.classList.add('reveal');
-      }, headingLetters.length * 50); // Delay for all letters to reveal first
-    }, 3500); // 2.3 seconds delay after the model loads
+      }, headingLetters.length * 50);
+    }, 3500);
   },
   (xhr) => {
-    loaderProgress = (xhr.loaded / xhr.total) * 100;  
+    const minProgress = 20;
+    const maxProgress = 75;
+    loaderProgress = Math.floor(Math.random() * (maxProgress - minProgress + 1)) + minProgress;
+    
     loaderBar.style.width = loaderProgress + '%';
     console.log(loaderProgress + '% loaded');
   },
+  // Error handler
   (error) => {
     console.error('An error occurred while loading the model:', error);
   }
 );
-
-
 
 
 // Water
