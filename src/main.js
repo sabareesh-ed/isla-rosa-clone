@@ -47,6 +47,9 @@ renderer.toneMappingExposure = 0.7;
 // Define the staggered delay times for each column (in seconds)
 const staggerTimes = [0.4, 0.2, 0.6, 0.8, 0.5, 0.3, 0.6, 0.4, 0.7]; 
 
+// Declare a variable to store the last progress value outside of the loader callback
+let lastProgress = 20; // Start at 20 (or 0 if you prefer to start from zero)
+
 loader.load(
   'https://sail-cdn.netlify.app/building.glb',
   (gltf) => {
@@ -88,19 +91,33 @@ loader.load(
       }, headingLetters.length * 50);
     }, 3500);
   },
+  // Progress handler
   (xhr) => {
+    // Define the bounds for the progress illusion
     const minProgress = 20;
     const maxProgress = 75;
-    loaderProgress = Math.floor(Math.random() * (maxProgress - minProgress + 1)) + minProgress;
-    
+
+    // Generate a random progress in [20,75]
+    let newProgress = Math.floor(Math.random() * (maxProgress - minProgress + 1)) + minProgress;
+
+    // Ensure the progress doesn't decrease compared to the last recorded value
+    if (newProgress < lastProgress) {
+      newProgress = lastProgress;
+    }
+
+    // Update the progress bar
+    loaderProgress = newProgress;
     loaderBar.style.width = loaderProgress + '%';
     console.log(loaderProgress + '% loaded');
+
+    // Update the global lastProgress value
+    lastProgress = newProgress;
   },
-  // Error handler
   (error) => {
     console.error('An error occurred while loading the model:', error);
   }
 );
+
 
 
 // Water
