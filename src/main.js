@@ -17,6 +17,9 @@ const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerH
 camera.position.set(100, 88, 145);
 scene.add(camera);
 
+const sceneGroup = new THREE.Group();
+scene.add(sceneGroup);
+
 // Renderer
 const renderer = new THREE.WebGLRenderer({ canvas: canvas });
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -26,11 +29,11 @@ renderer.toneMappingExposure = 0.5;
 
 // Lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
-scene.add(ambientLight);
+sceneGroup.add(ambientLight);
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
 directionalLight.position.set(5, 5, 5);
-scene.add(directionalLight);
+sceneGroup.add(directionalLight);
 directionalLight.intensity = 1.5;
 
 // GLTF Loader - Building Model
@@ -47,15 +50,14 @@ renderer.toneMappingExposure = 0.7;
 // Define the staggered delay times for each column (in seconds)
 const staggerTimes = [0.4, 0.2, 0.6, 0.8, 0.5, 0.3, 0.6, 0.4, 0.7]; 
 
-// Declare a variable to store the last progress value outside of the loader callback
-let lastProgress = 20; // Start at 20 (or 0 if you prefer to start from zero)
+let lastProgress = 20;
 
 loader.load(
   'https://sail-cdn.netlify.app/building.glb',
   (gltf) => {
     building = gltf.scene;
     building.scale.set(1, 1, 1);
-    scene.add(building);
+    sceneGroup.add(building);
     building.rotation.y = -Math.PI / 1.25;
      
     setTimeout(() => {
@@ -91,26 +93,20 @@ loader.load(
       }, headingLetters.length * 50);
     }, 3500);
   },
-  // Progress handler
   (xhr) => {
-    // Define the bounds for the progress illusion
     const minProgress = 20;
     const maxProgress = 75;
 
-    // Generate a random progress in [20,75]
     let newProgress = Math.floor(Math.random() * (maxProgress - minProgress + 1)) + minProgress;
 
-    // Ensure the progress doesn't decrease compared to the last recorded value
     if (newProgress < lastProgress) {
       newProgress = lastProgress;
     }
 
-    // Update the progress bar
     loaderProgress = newProgress;
     loaderBar.style.width = loaderProgress + '%';
     console.log(loaderProgress + '% loaded');
 
-    // Update the global lastProgress value
     lastProgress = newProgress;
   },
   (error) => {
@@ -121,7 +117,7 @@ loader.load(
 
 
 // Water
-const waterGeometry = new THREE.PlaneGeometry(4000, 4000);
+const waterGeometry = new THREE.PlaneGeometry(20, 20);
 const textureLoader = new THREE.TextureLoader();
 const waterNormals = textureLoader.load('https://threejs.org/examples/textures/waternormals.jpg', (texture) => {
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
@@ -138,26 +134,34 @@ const water = new Water(waterGeometry, {
   size: 30
 });
 
+// Replace the line in the vertex shader before it compiles
+// water.material.onBeforeCompile = (shader) => {
+//   shader.vertexShader = shader.vertexShader.replace(
+//     'worldPosition = mirrorCoord.xyzw;',
+//     'worldPosition = vec4(position, 1.0);'
+//   );
+// };
+
 water.rotation.x = -Math.PI / 2;
 water.position.y = -1;
 water.material.uniforms['size'].value = 60.0;
 
-scene.add(water);
+sceneGroup.add(water);
 
 // Skybox
 const sky = new Sky();
 sky.scale.setScalar(1000);
-scene.add(sky);
+sceneGroup.add(sky);
 
 const skyUniforms = sky.material.uniforms;
 
-skyUniforms['turbidity'].value = 2;  // Moderate turbidity
-skyUniforms['rayleigh'].value = 1.5;  // Slightly reduced Rayleigh scattering (less intense blue)
-skyUniforms['mieCoefficient'].value = 0.005;  // Reduce to allow more clarity
-skyUniforms['mieDirectionalG'].value = 0.7;  // Less hazy sun
+skyUniforms['turbidity'].value = 2;  
+skyUniforms['rayleigh'].value = 1.5;  
+skyUniforms['mieCoefficient'].value = 0.005;  
+skyUniforms['mieDirectionalG'].value = 0.7;  
 
-water.material.uniforms['sunColor'].value = new THREE.Color(0xffffff);  // Maintain white sunlight
-water.material.uniforms['waterColor'].value = new THREE.Color(0x001e0f);  // Dark water color, but not too black
+water.material.uniforms['sunColor'].value = new THREE.Color(0xffffff);  
+water.material.uniforms['waterColor'].value = new THREE.Color(0x001e0f);  
 
 
 const parameters = {
@@ -173,9 +177,8 @@ function updateSun() {
   sun.setFromSphericalCoords(1, phi, theta);
   sky.material.uniforms['sunPosition'].value.copy(sun);
   water.material.uniforms['sunDirection'].value.copy(sun).normalize();
-  water.material.uniforms['sunColor'].value = new THREE.Color(0xffffff);  // White sun color
-  water.material.uniforms['sunDirection'].value.copy(sun).normalize(); // Ensure it's pointing to the sun
-
+  water.material.uniforms['sunColor'].value = new THREE.Color(0xffffff);
+  water.material.uniforms['sunDirection'].value.copy(sun).normalize();
 }
 
 updateSun();
@@ -218,7 +221,7 @@ function swoopCameraToBuilding() {
       } else {
         controls.enabled = false;
         swoopCompleted = true;
-        scrollCameraPosition = { ...targetPosition }; // Update the scrollCameraPosition to the final swoop position
+        scrollCameraPosition = { ...targetPosition };
       }
     }
 
@@ -288,7 +291,7 @@ const folderLight = gui.addFolder('Light');
 // Create a directional light
 const directionalLight2 = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight2.position.set(5, 7, 5); // Set initial position of the light
-scene.add(directionalLight2);
+sceneGroup.add(directionalLight2);
 
 // Add light position controls
 folderLight.add(directionalLight2.position, 'x', -50, 50, 0.1).name('Light X');
@@ -318,4 +321,11 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+document.addEventListener('mousemove', (event) => {
+  const mouseX = (event.clientX / window.innerWidth) - 0.5;
+  const mouseY = (event.clientY / window.innerHeight) - 0.5;
+  sceneGroup.rotation.y = mouseX * 0.08;
+  sceneGroup.rotation.x = -mouseY * 0.08;
 });
