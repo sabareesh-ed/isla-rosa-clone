@@ -223,7 +223,7 @@ function swoopCameraToBuilding() {
 let scrollStarted = false;
 let scrollEndPosition = window.innerHeight * 2.1; // e.g., 2 viewport heights
 const startCameraPosition = new THREE.Vector3(-4, 2, 12);
-const endCameraPosition   = new THREE.Vector3(-6, 1, 6);
+const endCameraPosition   = new THREE.Vector3(-8, 0.1, 4);
 
 const baseCameraPosition  = new THREE.Vector3().copy(startCameraPosition);
 
@@ -263,8 +263,8 @@ document.addEventListener('mousemove', (event) => {
 
   const offsetMultiplier = 1.5;
 
-  mouseOffset.x = mouseX * offsetMultiplier;
-  mouseOffset.y = -mouseY * offsetMultiplier;
+  mouseOffset.x = -mouseX * offsetMultiplier;
+  mouseOffset.y = mouseY * offsetMultiplier;
   mouseOffset.z = 0;
 });
 
