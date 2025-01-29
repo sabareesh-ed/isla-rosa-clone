@@ -92,6 +92,7 @@ loader.load(
         headingSubtitleWrap.classList.add('reveal');
       }, headingLetters.length * 50);
     }, 3500);
+    loaderBar.style.width = '100%';
   },
   (xhr) => {
     const minProgress = 20;
@@ -117,20 +118,20 @@ loader.load(
 
 
 // Water
-const waterGeometry = new THREE.PlaneGeometry(20, 20);
+const waterGeometry = new THREE.PlaneGeometry(2000, 2000);
 const textureLoader = new THREE.TextureLoader();
 const waterNormals = textureLoader.load('https://threejs.org/examples/textures/waternormals.jpg', (texture) => {
-  texture.wrapS = texture.wrapT = THREE.MirroredRepeatWrapping;
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
 });
 
 const water = new Water(waterGeometry, {
-  textureWidth: 256,
-  textureHeight: 256,
+  textureWidth: 2000,
+  textureHeight: 2000,
   waterNormals: waterNormals,
   sunDirection: new THREE.Vector3(),
   sunColor: 0xffffff,
   waterColor: 0x001e0f,
-  distortionScale: 1.7,
+  distortionScale: 1.2,
   size: 30
 });
 
@@ -144,7 +145,7 @@ const water = new Water(waterGeometry, {
 
 water.rotation.x = -Math.PI / 2;
 water.position.y = -1;
-water.material.uniforms['size'].value = 60.0;
+water.material.uniforms['size'].value = 80.0;
 
 sceneGroup.add(water);
 
@@ -229,14 +230,17 @@ function swoopCameraToBuilding() {
   }
 }
 
-// Scroll Listener for Logging and Animation
+// Scroll logic
 let scrollStarted = false;
-let scrollEndPosition = window.innerHeight * 2; // 100vh
+let scrollEndPosition = window.innerHeight * 2; // e.g., 2 viewport heights
+const startCameraPosition = new THREE.Vector3(-4, 2, 12);
+const endCameraPosition   = new THREE.Vector3(-6, 1, 6);
 
-// Camera target position during scroll animation
-const startCameraPosition = { x: -4, y: 2, z: 12 };
-const endCameraPosition = { x: -6, y: 1, z: 6 };
-let scrollCameraPosition = { ...startCameraPosition };
+const baseCameraPosition  = new THREE.Vector3().copy(startCameraPosition);
+
+const mouseOffset         = new THREE.Vector3(0, 0, 0);
+
+const targetCameraPosition = new THREE.Vector3();
 
 window.addEventListener('scroll', () => {
   if (swoopCompleted && !scrollStarted) {
@@ -248,23 +252,33 @@ window.addEventListener('scroll', () => {
       (window.scrollY / scrollEndPosition) * 100,
       100
     );
+
     console.log(`Scroll progress: ${scrollPercentage.toFixed(2)}%`);
 
-    // Linear interpolation for camera position based on scroll progress
-    scrollCameraPosition.x = startCameraPosition.x + (endCameraPosition.x - startCameraPosition.x) * (scrollPercentage.toFixed(0) / 100);
-    scrollCameraPosition.y = startCameraPosition.y + (endCameraPosition.y - startCameraPosition.y) * (scrollPercentage.toFixed(0) / 100);
-    scrollCameraPosition.z = startCameraPosition.z + (endCameraPosition.z - startCameraPosition.z) * (scrollPercentage.toFixed(0) / 100);
+    const t = scrollPercentage / 100;
 
-    // Update camera position during scroll
-    camera.position.set(scrollCameraPosition.x, scrollCameraPosition.y, scrollCameraPosition.z);
-
-    // Update GUI values in real time
-    folderCamera.__controllers.forEach((controller) => controller.updateDisplay());
+    baseCameraPosition.x = THREE.MathUtils.lerp(startCameraPosition.x, endCameraPosition.x, t);
+    baseCameraPosition.y = THREE.MathUtils.lerp(startCameraPosition.y, endCameraPosition.y, t);
+    baseCameraPosition.z = THREE.MathUtils.lerp(startCameraPosition.z, endCameraPosition.z, t);
 
     if (scrollPercentage >= 100) {
-      scrollStarted = false; // Reset after reaching 100%
+      scrollStarted = false;
     }
   }
+});
+
+
+document.addEventListener('mousemove', (event) => {
+  // Normalized device coordinates from -0.5..+0.5
+  const mouseX = (event.clientX / window.innerWidth) - 0.5;
+  const mouseY = (event.clientY / window.innerHeight) - 0.5;
+
+  // Create a small offset range. Adjust multiplier as needed for subtlety.
+  const offsetMultiplier = 1.0; // e.g., 0.5 or 1.0 for subtle movement
+
+  mouseOffset.x = mouseX * offsetMultiplier;
+  mouseOffset.y = mouseY * offsetMultiplier; // invert if you prefer
+  mouseOffset.z = 0; // or a small fraction if you want front-back subtlety
 });
 
 // GUI
@@ -273,18 +287,18 @@ const gui = new GUI();
 const folderSky = gui.addFolder('Sky');
 folderSky.add(parameters, 'elevation', 0, 90, 0.1).onChange(updateSun);
 folderSky.add(parameters, 'azimuth', -180, 180, 0.1).onChange(updateSun);
-folderSky.open();
+// folderSky.open();
 
 const folderWater = gui.addFolder('Water');
 folderWater.add(water.material.uniforms['distortionScale'], 'value', 0, 8, 0.1).name('distortionScale');
 folderWater.add(water.material.uniforms['size'], 'value', 0.1, 10, 0.1).name('size');
-folderWater.open();
+// folderWater.open();
 
 const folderCamera = gui.addFolder('Camera');
 folderCamera.add(camera.position, 'x', -100, 100, 0.1).name('Camera X');
 folderCamera.add(camera.position, 'y', -100, 100, 0.1).name('Camera Y');
 folderCamera.add(camera.position, 'z', -100, 100, 0.1).name('Camera Z');
-folderCamera.open();
+// folderCamera.open();
 
 const folderLight = gui.addFolder('Light');
 
@@ -300,7 +314,7 @@ folderLight.add(directionalLight2.position, 'z', -50, 50, 0.1).name('Light Z');
 
 // Add light intensity control
 folderLight.add(directionalLight2, 'intensity', 0, 2, 0.1).name('Intensity');
-folderLight.open();
+// folderLight.open();
 
 // Animation Loop
 function animate() {
@@ -309,6 +323,12 @@ function animate() {
   // Update water time uniform to create wobble
   const elapsedTime = performance.now() * 0.0004;
   water.material.uniforms['time'].value = elapsedTime;
+
+  if (swoopCompleted) {
+    targetCameraPosition.copy(baseCameraPosition).add(mouseOffset);
+
+  camera.position.lerp(targetCameraPosition, 0.1);
+  }
 
   controls.update();
   renderer.render(scene, camera);
@@ -320,11 +340,4 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-document.addEventListener('mousemove', (event) => {
-  const mouseX = (event.clientX / window.innerWidth) - 0.5;
-  const mouseY = (event.clientY / window.innerHeight) - 0.5;
-  sceneGroup.rotation.y = mouseX * 0.08;
-  sceneGroup.rotation.x = -mouseY * 0.08;
 });
