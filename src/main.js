@@ -39,11 +39,11 @@ directionalLight.intensity = 1.5;
 // GLTF Loader - Building Model
 let building;
 const loader = new GLTFLoader();
-const loaderBar = document.querySelector('.loader-logo-bar'); // Assuming the bar is inside the loader-logo-bar element
+const loaderBar = document.querySelector('.loader-logo-bar');
 const loaderColumns = document.querySelectorAll('.loader-column');
 const loaderLogo = document.querySelector('.loader-logo');
 const loaderWrap = document.querySelector('.loader');
-let loaderProgress = 0; // Store the loading progress percentage
+let loaderProgress = 0;
 
 renderer.toneMappingExposure = 0.7; 
 
@@ -99,7 +99,6 @@ loader.load(
     const maxProgress = 75;
 
     let newProgress = Math.floor(Math.random() * (maxProgress - minProgress + 1)) + minProgress;
-
     if (newProgress < lastProgress) {
       newProgress = lastProgress;
     }
@@ -115,18 +114,16 @@ loader.load(
   }
 );
 
-
-
 // Water
-const waterGeometry = new THREE.PlaneGeometry(2000, 2000);
+const waterGeometry = new THREE.PlaneGeometry(2300, 2300);
 const textureLoader = new THREE.TextureLoader();
 const waterNormals = textureLoader.load('https://threejs.org/examples/textures/waternormals.jpg', (texture) => {
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
 });
 
 const water = new Water(waterGeometry, {
-  textureWidth: 2000,
-  textureHeight: 2000,
+  textureWidth: 1000,
+  textureHeight: 1000,
   waterNormals: waterNormals,
   sunDirection: new THREE.Vector3(),
   sunColor: 0xffffff,
@@ -134,14 +131,6 @@ const water = new Water(waterGeometry, {
   distortionScale: 1.2,
   size: 30
 });
-
-// Replace the line in the vertex shader before it compiles
-// water.material.onBeforeCompile = (shader) => {
-//   shader.vertexShader = shader.vertexShader.replace(
-//     'worldPosition = mirrorCoord.xyzw;',
-//     'worldPosition = vec4(position, 1.0);'
-//   );
-// };
 
 water.rotation.x = -Math.PI / 2;
 water.position.y = -1;
@@ -166,8 +155,8 @@ water.material.uniforms['waterColor'].value = new THREE.Color(0x001e0f);
 
 
 const parameters = {
-  elevation: 4.5,
-  azimuth: 100,
+  elevation: 4,
+  azimuth: 120,
 };
 
 const sun = new THREE.Vector3();
@@ -175,7 +164,7 @@ const sun = new THREE.Vector3();
 function updateSun() {
   const phi = THREE.MathUtils.degToRad(90 - parameters.elevation);
   const theta = THREE.MathUtils.degToRad(parameters.azimuth);
-  sun.setFromSphericalCoords(1, phi, theta);
+  sun.setFromSphericalCoords(2, phi, theta);
   sky.material.uniforms['sunPosition'].value.copy(sun);
   water.material.uniforms['sunDirection'].value.copy(sun).normalize();
   water.material.uniforms['sunColor'].value = new THREE.Color(0xffffff);
@@ -232,7 +221,7 @@ function swoopCameraToBuilding() {
 
 // Scroll logic
 let scrollStarted = false;
-let scrollEndPosition = window.innerHeight * 2; // e.g., 2 viewport heights
+let scrollEndPosition = window.innerHeight * 2.1; // e.g., 2 viewport heights
 const startCameraPosition = new THREE.Vector3(-4, 2, 12);
 const endCameraPosition   = new THREE.Vector3(-6, 1, 6);
 
@@ -269,16 +258,14 @@ window.addEventListener('scroll', () => {
 
 
 document.addEventListener('mousemove', (event) => {
-  // Normalized device coordinates from -0.5..+0.5
   const mouseX = (event.clientX / window.innerWidth) - 0.5;
   const mouseY = (event.clientY / window.innerHeight) - 0.5;
 
-  // Create a small offset range. Adjust multiplier as needed for subtlety.
-  const offsetMultiplier = 1.0; // e.g., 0.5 or 1.0 for subtle movement
+  const offsetMultiplier = 1.5;
 
   mouseOffset.x = mouseX * offsetMultiplier;
-  mouseOffset.y = mouseY * offsetMultiplier; // invert if you prefer
-  mouseOffset.z = 0; // or a small fraction if you want front-back subtlety
+  mouseOffset.y = -mouseY * offsetMultiplier;
+  mouseOffset.z = 0;
 });
 
 // GUI
@@ -303,13 +290,13 @@ folderCamera.add(camera.position, 'z', -100, 100, 0.1).name('Camera Z');
 const folderLight = gui.addFolder('Light');
 
 // Create a directional light
-const directionalLight2 = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight2.position.set(5, 7, 5); // Set initial position of the light
+const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.8);
+directionalLight2.position.set(-60, 100, 44);
 sceneGroup.add(directionalLight2);
 
 // Add light position controls
 folderLight.add(directionalLight2.position, 'x', -50, 50, 0.1).name('Light X');
-folderLight.add(directionalLight2.position, 'y', 0, 50, 0.1).name('Light Y'); // Adjust to keep the light above the ground
+folderLight.add(directionalLight2.position, 'y', 0, 50, 0.1).name('Light Y'); 
 folderLight.add(directionalLight2.position, 'z', -50, 50, 0.1).name('Light Z');
 
 // Add light intensity control
@@ -320,7 +307,6 @@ folderLight.add(directionalLight2, 'intensity', 0, 2, 0.1).name('Intensity');
 function animate() {
   requestAnimationFrame(animate);
 
-  // Update water time uniform to create wobble
   const elapsedTime = performance.now() * 0.0004;
   water.material.uniforms['time'].value = elapsedTime;
 
