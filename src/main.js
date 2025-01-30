@@ -14,7 +14,7 @@ const scene = new THREE.Scene();
 
 // Camera
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 10000);
-camera.position.set(100, 88, 145);
+camera.position.set(80, 98, 145);
 scene.add(camera);
 
 const sceneGroup = new THREE.Group();
@@ -59,7 +59,8 @@ loader.load(
     building.scale.set(1, 1, 1);
     sceneGroup.add(building);
     building.rotation.y = -Math.PI / 1.25;
-     
+    building.position.y = 1;
+    sceneGroup.position.y = -0.5;
     setTimeout(() => {
       loaderLogo.classList.add('hide-logo');
     }, 400);
@@ -115,7 +116,6 @@ loader.load(
   }
 );
 
-// Water
 const waterGeometry = new THREE.PlaneGeometry(2300, 2300);
 const textureLoader = new THREE.TextureLoader();
 const waterNormals = textureLoader.load('https://threejs.org/examples/textures/waternormals.jpg', (texture) => {
@@ -133,17 +133,14 @@ const water = new Water(waterGeometry, {
   size: 30
 });
 
-water.rotation.x = -Math.PI / 2;
-water.position.y = -1;
+water.rotation.x = -Math.PI / 2; 
 water.material.uniforms['size'].value = 80.0;
 
 sceneGroup.add(water);
 
-// Skybox
 const sky = new Sky();
 sky.scale.setScalar(1000);
 sceneGroup.add(sky);
-
 const skyUniforms = sky.material.uniforms;
 
 skyUniforms['turbidity'].value = 2;  
@@ -174,15 +171,12 @@ function updateSun() {
 
 updateSun();
 
-
-// Orbit Controls
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.enableZoom = true;
 controls.maxPolarAngle = Math.PI / 2;
 
-// Camera Swoop Animation
 let swoopCompleted = false;
 function swoopCameraToBuilding() {
   if (building) {
@@ -226,7 +220,6 @@ function swoopCameraToBuilding() {
 }
 
 
-// Scroll logic
 let scrollStarted = false;
 let scrollEndPosition = window.innerHeight * 2.6; 
 let startCameraPosition
@@ -236,12 +229,9 @@ if (window.innerWidth >= 767) {
 } else {
   startCameraPosition = new THREE.Vector3(-6, 2, 14);
 }
-const endCameraPosition = new THREE.Vector3(-8.5, 0, 2);
-
+const endCameraPosition = new THREE.Vector3(-6.5, -0.125, 2);
 const baseCameraPosition = new THREE.Vector3().copy(startCameraPosition);
-
 const mouseOffset = new THREE.Vector3(0, 0, 0);
-
 const targetCameraPosition = new THREE.Vector3();
 
 if (window.innerWidth >= 767) {
@@ -289,36 +279,28 @@ const gui = new GUI();
 const folderSky = gui.addFolder('Sky');
 folderSky.add(parameters, 'elevation', 0, 90, 0.1).onChange(updateSun);
 folderSky.add(parameters, 'azimuth', -180, 180, 0.1).onChange(updateSun);
-// folderSky.open();
 
 const folderWater = gui.addFolder('Water');
 folderWater.add(water.material.uniforms['distortionScale'], 'value', 0, 8, 0.1).name('distortionScale');
 folderWater.add(water.material.uniforms['size'], 'value', 0.1, 10, 0.1).name('size');
-// folderWater.open();
 
 const folderCamera = gui.addFolder('Camera');
 folderCamera.add(camera.position, 'x', -100, 100, 0.1).name('Camera X');
 folderCamera.add(camera.position, 'y', -100, 100, 0.1).name('Camera Y');
 folderCamera.add(camera.position, 'z', -100, 100, 0.1).name('Camera Z');
-// folderCamera.open();
 
 const folderLight = gui.addFolder('Light');
 
-// Create a directional light
 const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.8);
 directionalLight2.position.set(-60, 100, 44);
 sceneGroup.add(directionalLight2);
 
-// Add light position controls
 folderLight.add(directionalLight2.position, 'x', -50, 50, 0.1).name('Light X');
 folderLight.add(directionalLight2.position, 'y', 0, 50, 0.1).name('Light Y'); 
 folderLight.add(directionalLight2.position, 'z', -50, 50, 0.1).name('Light Z');
 
-// Add light intensity control
 folderLight.add(directionalLight2, 'intensity', 0, 2, 0.1).name('Intensity');
-// folderLight.open();
 
-// Animation Loop
 function animate() {
   requestAnimationFrame(animate);
 
