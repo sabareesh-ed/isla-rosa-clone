@@ -184,7 +184,7 @@ function swoopCameraToBuilding() {
     if (window.innerWidth >= 767) {
       targetPosition = new THREE.Vector3(-4, 2, 12);
     } else {
-      targetPosition = new THREE.Vector3(-6, 2, 14);
+      targetPosition = new THREE.Vector3(-5, 2, 14);
     }
 
     const startPosition = camera.position.clone();
@@ -227,7 +227,7 @@ let startCameraPosition
 if (window.innerWidth >= 767) {
   startCameraPosition = new THREE.Vector3(-4, 2, 12);
 } else {
-  startCameraPosition = new THREE.Vector3(-6, 2, 14);
+  startCameraPosition = new THREE.Vector3(-5, 2, 14);
 }
 const endCameraPosition = new THREE.Vector3(-6.5, -0.125, 2);
 const baseCameraPosition = new THREE.Vector3().copy(startCameraPosition);
