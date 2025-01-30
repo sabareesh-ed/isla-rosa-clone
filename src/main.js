@@ -93,6 +93,7 @@ loader.load(
       }, headingLetters.length * 50);
     }, 3500);
     loaderBar.style.width = '100%';
+    window.scrollTo(0,0);
   },
   (xhr) => {
     const minProgress = 20;
@@ -156,7 +157,7 @@ water.material.uniforms['waterColor'].value = new THREE.Color(0x001e0f);
 
 const parameters = {
   elevation: 4,
-  azimuth: 120,
+  azimuth: 90,
 };
 
 const sun = new THREE.Vector3();
@@ -185,7 +186,13 @@ controls.maxPolarAngle = Math.PI / 2;
 let swoopCompleted = false;
 function swoopCameraToBuilding() {
   if (building) {
-    const targetPosition = new THREE.Vector3(-4, 2, 12);
+    let targetPosition;
+    if (window.innerWidth >= 767) {
+      targetPosition = new THREE.Vector3(-4, 2, 12);
+    } else {
+      targetPosition = new THREE.Vector3(-6, 2, 14);
+    }
+
     const startPosition = camera.position.clone();
     const animationDuration = 1.5;
     const startTime = performance.now();
@@ -193,19 +200,19 @@ function swoopCameraToBuilding() {
     function animateSwoop() {
       const elapsedTime = (performance.now() - startTime) / 2250;
       const t = Math.min(elapsedTime / animationDuration, 1);
+
       const easeInOutQuad = (t) => {
         if (t < 0.5) {
           return 2 * t * t;
         } else {
           return 1 - Math.pow(1 - (t - 0.5) * 2, 3) * 0.5;
         }
-      }; 
+      };
 
       camera.position.lerpVectors(startPosition, targetPosition, easeInOutQuad(t));
       camera.lookAt(building.position);
 
       folderCamera.__controllers.forEach((controller) => controller.updateDisplay());
-
       if (t < 1) {
         requestAnimationFrame(animateSwoop);
       } else {
@@ -214,47 +221,55 @@ function swoopCameraToBuilding() {
         scrollCameraPosition = { ...targetPosition };
       }
     }
-
     animateSwoop();
   }
 }
 
+
 // Scroll logic
 let scrollStarted = false;
-let scrollEndPosition = window.innerHeight * 2.1; // e.g., 2 viewport heights
-const startCameraPosition = new THREE.Vector3(-4, 2, 12);
-const endCameraPosition   = new THREE.Vector3(-8, 0.1, 4);
+let scrollEndPosition = window.innerHeight * 2.6; 
+let startCameraPosition
 
-const baseCameraPosition  = new THREE.Vector3().copy(startCameraPosition);
+if (window.innerWidth >= 767) {
+  startCameraPosition = new THREE.Vector3(-4, 2, 12);
+} else {
+  startCameraPosition = new THREE.Vector3(-6, 2, 14);
+}
+const endCameraPosition = new THREE.Vector3(-8.5, 0, 2);
 
-const mouseOffset         = new THREE.Vector3(0, 0, 0);
+const baseCameraPosition = new THREE.Vector3().copy(startCameraPosition);
+
+const mouseOffset = new THREE.Vector3(0, 0, 0);
 
 const targetCameraPosition = new THREE.Vector3();
 
-window.addEventListener('scroll', () => {
-  if (swoopCompleted && !scrollStarted) {
-    scrollStarted = true;
-  }
-
-  if (scrollStarted) {
-    const scrollPercentage = Math.min(
-      (window.scrollY / scrollEndPosition) * 100,
-      100
-    );
-
-    console.log(`Scroll progress: ${scrollPercentage.toFixed(2)}%`);
-
-    const t = scrollPercentage / 100;
-
-    baseCameraPosition.x = THREE.MathUtils.lerp(startCameraPosition.x, endCameraPosition.x, t);
-    baseCameraPosition.y = THREE.MathUtils.lerp(startCameraPosition.y, endCameraPosition.y, t);
-    baseCameraPosition.z = THREE.MathUtils.lerp(startCameraPosition.z, endCameraPosition.z, t);
-
-    if (scrollPercentage >= 100) {
-      scrollStarted = false;
+if (window.innerWidth >= 767) {
+  window.addEventListener('scroll', () => {
+    if (swoopCompleted && !scrollStarted) {
+      scrollStarted = true;
     }
-  }
-});
+
+    if (scrollStarted) {
+      const scrollPercentage = Math.min(
+        (window.scrollY / scrollEndPosition) * 100,
+        100
+      );
+
+      console.log(`Scroll progress: ${scrollPercentage.toFixed(2)}%`);
+
+      const t = scrollPercentage / 100;
+
+      baseCameraPosition.x = THREE.MathUtils.lerp(startCameraPosition.x, endCameraPosition.x, t);
+      baseCameraPosition.y = THREE.MathUtils.lerp(startCameraPosition.y, endCameraPosition.y, t);
+      baseCameraPosition.z = THREE.MathUtils.lerp(startCameraPosition.z, endCameraPosition.z, t);
+
+      if (scrollPercentage >= 100) {
+        scrollStarted = false;
+      }
+    }
+  });
+}
 
 
 document.addEventListener('mousemove', (event) => {
